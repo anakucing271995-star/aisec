@@ -3,7 +3,7 @@ import os
 import hashlib
 from pii_masking import mask_ip, mask_pii_text
 
-ALERT_FILE = "alert.json"
+ALERT_FILE = "../alert.json"  # sesuaikan path relatif daemon ke alert.json
 
 def file_hash(path):
     with open(path, "rb") as f:
@@ -11,12 +11,18 @@ def file_hash(path):
 
 def load_alert_safe():
     if not os.path.exists(ALERT_FILE):
-        return None
+        return []
     try:
         with open(ALERT_FILE) as f:
-            return json.load(f)
+            data = json.load(f)
+            # pastikan selalu list
+            if isinstance(data, dict):
+                return [data]
+            elif isinstance(data, list):
+                return data
+            return []
     except json.JSONDecodeError:
-        return None
+        return []
 
 def sanitize_alert(alert, pii_enabled=True):
     return {
