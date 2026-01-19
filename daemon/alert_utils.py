@@ -1,13 +1,12 @@
 import json
 import os
 import hashlib
-from .pii_masking import mask_ip, mask_pii_text
+from pii_masking import mask_ip, mask_pii_text
 
-ALERT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "alert.json"))
+ALERT_FILE = os.path.join(os.path.dirname(__file__), "../alert.json")
 
-def file_hash(path):
-    with open(path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()
+def file_hash(alert):
+    return hashlib.md5(json.dumps(alert).encode()).hexdigest()
 
 def load_alert_safe():
     if not os.path.exists(ALERT_FILE):
@@ -15,14 +14,14 @@ def load_alert_safe():
     try:
         with open(ALERT_FILE) as f:
             data = json.load(f)
-            if isinstance(data, list) and len(data) > 0:
-                return data[-1]  # Ambil alert terbaru
+            if isinstance(data, list) and data:
+                return data[-1]  # ambil alert terbaru
             return None
     except json.JSONDecodeError:
         return None
 
 def sanitize_alert(alert, pii_enabled=True):
-    if not alert:
+    if not alert or not isinstance(alert, dict):
         return None
     return {
         "siem": alert.get("siem", "Unknown"),
