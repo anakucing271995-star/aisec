@@ -1,13 +1,27 @@
-{% extends "layout.html" %}
-{% block content %}
-<form method="post">
-  <h3>Edit Prompt</h3>
-  <textarea name="system_prompt" rows="10">{{ prompt.system_prompt }}</textarea><br>
-  <textarea name="user_prompt" rows="10">{{ prompt.user_prompt_template }}</textarea><br>
-  <label>
-    <input type="checkbox" name="pii_masking" {% if prompt.pii_masking %}checked{% endif %}>
-    Enable PII Masking
-  </label><br>
-  <button>Save</button>
-</form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Prompt - SOC Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main>
+        <h1>Edit Prompt: {{ prompt.name }}</h1>
+        <form method="post">
+            <label>System Prompt:<br>
+                <textarea name="system_prompt" rows="6">{{ prompt.system_prompt }}</textarea>
+            </label><br>
+            <label>User Prompt Template:<br>
+                <textarea name="user_prompt" rows="4">{{ prompt.user_prompt_template }}</textarea>
+            </label><br>
+            <label>
+                <input type="checkbox" name="pii_masking" {% if prompt.pii_masking %}checked{% endif %}>
+                Enable PII Masking
+            </label><br>
+            <button type="submit">Save</button>
+        </form>
+        <a href="/">Back</a>
+    </main>
+</body>
+</html>

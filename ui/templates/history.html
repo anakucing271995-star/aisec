@@ -1,35 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Prompt History</title>
+    <meta charset="UTF-8">
+    <title>Prompt History - SOC Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Prompt History</h1>
-    <p><a href="/">Kembali ke Prompts</a> | <a href="/logout">Logout</a></p>
-
-    {% if history %}
-        <table border="1" cellpadding="5" cellspacing="0">
-            <tr>
-                <th>ID</th>
-                <th>Prompt Name</th>
-                <th>Alert Hash</th>
-                <th>Final Prompt</th>
-                <th>LLM Response</th>
-                <th>Created At</th>
-            </tr>
-            {% for h in history %}
-            <tr>
-                <td>{{ h.id }}</td>
-                <td>{{ h.prompt_name }}</td>
-                <td>{{ h.alert_hash }}</td>
-                <td><pre>{{ h.final_prompt }}</pre></td>
-                <td><pre>{{ h.llm_response }}</pre></td>
-                <td>{{ h.created_at }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>No history found.</p>
-    {% endif %}
+    <header>
+        <h1>Prompt History</h1>
+        <a href="/">Back to Dashboard</a>
+    </header>
+    <main>
+        {% if history %}
+            <table>
+                <tr>
+                    <th>Prompt Name</th>
+                    <th>Created At</th>
+                    <th>Alert Hash</th>
+                    <th>LLM Response</th>
+                </tr>
+                {% for h in history %}
+                    <tr>
+                        <td>{{ h.prompt_name }}</td>
+                        <td>{{ h.created_at }}</td>
+                        <td>{{ h.alert_hash }}</td>
+                        <td><pre>{{ h.llm_response }}</pre></td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No history yet.</p>
+        {% endif %}
+    </main>
 </body>
 </html>

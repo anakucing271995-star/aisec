@@ -1,62 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>SOC Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #333; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
+import sys
+import os
+from flask import Flask, render_template, request, redirect, session
 
-<h1>Active Prompts</h1>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>System Prompt</th>
-        <th>User Prompt Template</th>
-        <th>Active</th>
-        <th>PII Masking</th>
-    </tr>
-    {% for p in prompts %}
-    <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.name }}</td>
-        <td>{{ p.system_prompt }}</td>
-        <td>{{ p.user_prompt_template }}</td>
-        <td>{{ p.is_active }}</td>
-        <td>{{ p.pii_masking }}</td>
-    </tr>
-    {% endfor %}
-</table>
+# tambah root project ke sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-<h1>Latest Alerts</h1>
-{% if alerts %}
-<table>
-    <tr>
-        <th>SIEM</th>
-        <th>Severity</th>
-        <th>Event</th>
-        <th>Source IP</th>
-        <th>Destination</th>
-    </tr>
-    {% for alert in alerts %}
-    <tr>
-        <td>{{ alert.siem }}</td>
-        <td>{{ alert.severity }}</td>
-        <td>{{ alert.event }}</td>
-        <td>{{ alert.source_ip }}</td>
-        <td>{{ alert.destination }}</td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>No alerts found.</p>
-{% endif %}
+from daemon.alert_utils import load_alert_safe, sanitize_alert
+from daemon.prompt_manager import get_active_prompt
+from db import get_db
+from auth import login_required, lead_required
+import hashlib
 
-</body>
-</html>
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method == "POST":
+        user = request.form["username"]
+        pwd = hashlib.sha256(request.form["password"].encode()).hexdigest()
+
+        conn = get_db()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM users WHERE username=%s AND password_hash=%s", (user, pwd))
+        u = cur.fetchone()
+        if u:
+            session["user"] = u["username"]
+            session["role"] = u["role"]
+            return redirect("/")
+        return "Login failed"
+    return render_template("login.html")
+
+@app.route("/")
+@login_required
+def index():
+    prompts = []
+    alert_display = None
+
+    # Ambil semua prompts
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT * FROM prompts")
+    prompts = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # Ambil alert terakhir
+    alert_data = load_alert_safe()
+    alert_display = sanitize_alert(alert_data) if alert_data else None
+
+    return render_template("index.html", prompts=prompts, alert=alert_display)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

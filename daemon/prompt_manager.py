@@ -1,4 +1,4 @@
-from db import get_db
+from .db import get_db
 
 def get_active_prompt():
     conn = get_db()
