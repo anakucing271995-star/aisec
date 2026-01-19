@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, redirect, session
 from db import get_db
 from auth import login_required, lead_required
 import hashlib
+import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '../daemon'))
 from alert_utils import load_alert_safe, sanitize_alert
 from prompt_manager import get_active_prompt, build_prompt
 
