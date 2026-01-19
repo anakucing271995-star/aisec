@@ -4,7 +4,15 @@ from daemon.alert_utils import load_alert_safe, sanitize_alert
 from daemon.prompt_manager import get_active_prompt
 from daemon.db import get_db
 import hashlib
+import sys
 import os
+
+# tambahkan folder daemon ke Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), "../daemon"))
+from alert_utils import load_alert_safe, sanitize_alert
+from prompt_manager import get_active_prompt
+from db import get_db
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
