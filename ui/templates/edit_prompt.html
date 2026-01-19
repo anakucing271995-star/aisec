@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+<form method="post">
+  <h3>Edit Prompt</h3>
+  <textarea name="system_prompt" rows="10">{{ prompt.system_prompt }}</textarea><br>
+  <textarea name="user_prompt" rows="10">{{ prompt.user_prompt_template }}</textarea><br>
+  <label>
+    <input type="checkbox" name="pii_masking" {% if prompt.pii_masking %}checked{% endif %}>
+    Enable PII Masking
+  </label><br>
+  <button>Save</button>
+</form>
+{% endblock %}

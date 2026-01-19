@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3>Prompt History</h3>
+{% for h in history %}
+<hr>
+<b>{{ h.created_at }} | {{ h.prompt_name }}</b>
+<pre>{{ h.llm_response }}</pre>
+{% endfor %}
+{% endblock %}

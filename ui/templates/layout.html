@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SOC AI Prompt Manager</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <h2>SOC AI Platform</h2>
+  <a href="/">Prompts</a> |
+  <a href="/history">History</a> |
+  <a href="/logout">Logout</a>
+  <hr>
+  {% block content %}{% endblock %}
+</body>
+</html>
