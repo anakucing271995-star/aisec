@@ -1,102 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>SOC Dashboard</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        .alert {
-            border: 1px solid #e74c3c;
-            background-color: #fdecea;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #f7f7f7;
-        }
-        a.button {
-            background-color: #3498db;
-            color: white;
-            padding: 5px 10px;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        a.button:hover {
-            background-color: #2980b9;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
 
-<h1>SOC Dashboard</h1>
-
-{% if alert %}
-<div class="alert">
-    <h2>Latest Alert</h2>
-    <p><strong>SIEM:</strong> {{ alert.siem }}</p>
-    <p><strong>Severity:</strong> {{ alert.severity }}</p>
-    <p><strong>Event:</strong> {{ alert.event }}</p>
-    <p><strong>Source IP:</strong> {{ alert.source_ip }}</p>
-    <p><strong>Destination:</strong> {{ alert.destination }}</p>
-</div>
-{% endif %}
-
-<h2>Prompts</h2>
+<h1>Active Prompts</h1>
 <table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>System Prompt</th>
-            <th>User Prompt Template</th>
-            <th>Active</th>
-            <th>PII Masking</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>System Prompt</th>
+        <th>User Prompt Template</th>
+        <th>Active</th>
+        <th>PII Masking</th>
+    </tr>
     {% for p in prompts %}
-        <tr>
-            <td>{{ p.id }}</td>
-            <td>{{ p.name }}</td>
-            <td>{{ p.system_prompt[:100] }}{% if p.system_prompt|length > 100 %}...{% endif %}</td>
-            <td>{{ p.user_prompt_template[:100] }}{% if p.user_prompt_template|length > 100 %}...{% endif %}</td>
-            <td>{{ 'Yes' if p.is_active else 'No' }}</td>
-            <td>{{ 'Yes' if p.pii_masking else 'No' }}</td>
-            <td>
-                {% if session.role == 'lead' %}
-                <a class="button" href="/prompt/edit/{{ p.id }}">Edit</a>
-                {% else %}
-                -
-                {% endif %}
-            </td>
-        </tr>
-    {% else %}
-        <tr><td colspan="7">No prompts found</td></tr>
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.name }}</td>
+        <td>{{ p.system_prompt }}</td>
+        <td>{{ p.user_prompt_template }}</td>
+        <td>{{ p.is_active }}</td>
+        <td>{{ p.pii_masking }}</td>
+    </tr>
     {% endfor %}
-    </tbody>
 </table>
 
-<a href="/history">View Prompt History</a> | 
-<a href="/logout">Logout</a>
+<h1>Latest Alerts</h1>
+{% if alerts %}
+<table>
+    <tr>
+        <th>SIEM</th>
+        <th>Severity</th>
+        <th>Event</th>
+        <th>Source IP</th>
+        <th>Destination</th>
+    </tr>
+    {% for alert in alerts %}
+    <tr>
+        <td>{{ alert.siem }}</td>
+        <td>{{ alert.severity }}</td>
+        <td>{{ alert.event }}</td>
+        <td>{{ alert.source_ip }}</td>
+        <td>{{ alert.destination }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No alerts found.</p>
+{% endif %}
 
 </body>
 </html>

@@ -2,71 +2,55 @@ from flask import Flask, render_template, request, redirect, session
 from db import get_db
 from auth import login_required, lead_required
 import hashlib
-import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../daemon'))
-from alert_utils import load_alert_safe, sanitize_alert
-from prompt_manager import get_active_prompt, build_prompt
+from daemon.alert_utils import load_alert_safe, sanitize_alert  # pastikan path benar
+from prompt_manager import get_active_prompt
 
-# -----------------------------
-# Inisialisasi Flask
-# -----------------------------
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY") or "dev_secret_key"
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 
-# -----------------------------
-# LOGIN ROUTE
-# -----------------------------
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["GET","POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password_hash = hashlib.sha256(request.form["password"].encode()).hexdigest()
+        user = request.form["username"]
+        pwd = hashlib.sha256(request.form["password"].encode()).hexdigest()
 
         conn = get_db()
         cur = conn.cursor(dictionary=True)
         cur.execute(
             "SELECT * FROM users WHERE username=%s AND password_hash=%s",
-            (username, password_hash)
+            (user, pwd)
         )
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        if user:
-            session["user"] = user["username"]
-            session["role"] = user["role"]
+        u = cur.fetchone()
+        if u:
+            session["user"] = u["username"]
+            session["role"] = u["role"]
             return redirect("/")
-        return "Login failed. Periksa username/password Anda."
-
+        return "Login failed"
     return render_template("login.html")
 
 
-# -----------------------------
-# DASHBOARD ROUTE
-# -----------------------------
 @app.route("/")
 @login_required
 def index():
+    # Ambil prompts dari DB
     conn = get_db()
     cur = conn.cursor(dictionary=True)
     cur.execute("SELECT * FROM prompts")
     prompts = cur.fetchall()
 
-    # Load latest alert
-    alert_data = load_alert_safe()
-    alert_display = sanitize_alert(alert_data) if alert_data else None
+    # Ambil alert dari alert.json
+    alert_list = load_alert_safe()  # ini list
+    sanitized_alerts = []
+    if alert_list:
+        for alert in alert_list:
+            sanitized_alerts.append(sanitize_alert(alert))
 
-    cur.close()
-    conn.close()
-    return render_template("index.html", prompts=prompts, alert=alert_display)
+    return render_template("index.html", prompts=prompts, alerts=sanitized_alerts)
 
 
-# -----------------------------
-# EDIT PROMPT ROUTE (LEAD ONLY)
-# -----------------------------
-@app.route("/prompt/edit/<int:id>", methods=["GET", "POST"])
+@app.route("/prompt/edit/<int:id>", methods=["GET","POST"])
 @lead_required
 def edit_prompt(id):
     conn = get_db()
@@ -87,20 +71,13 @@ def edit_prompt(id):
             id
         ))
         conn.commit()
-        cur.close()
-        conn.close()
         return redirect("/")
 
     cur.execute("SELECT * FROM prompts WHERE id=%s", (id,))
     prompt = cur.fetchone()
-    cur.close()
-    conn.close()
     return render_template("edit_prompt.html", prompt=prompt)
 
 
-# -----------------------------
-# HISTORY ROUTE
-# -----------------------------
 @app.route("/history")
 @login_required
 def history():
@@ -114,14 +91,8 @@ def history():
         LIMIT 100
     """)
     history = cur.fetchall()
-    cur.close()
-    conn.close()
     return render_template("history.html", history=history)
 
 
-# -----------------------------
-# RUN APP
-# -----------------------------
 if __name__ == "__main__":
-    # Debug True untuk melihat error saat develop
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
