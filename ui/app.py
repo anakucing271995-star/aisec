@@ -3,8 +3,12 @@ import os
 import hashlib
 from flask import Flask, render_template, request, redirect, session
 
-# --- Tambahkan parent folder ke sys.path agar bisa import daemon/ dan prompt_manager.py ---
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# ---------------------------
+# Tambahkan folder project root ke sys.path agar bisa import daemon/
+# ---------------------------
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from daemon.alert_utils import load_alert_safe, sanitize_alert
 from prompt_manager import get_active_prompt
@@ -12,7 +16,7 @@ from db import get_db
 from auth import login_required, lead_required
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "supersecretkey")  # fallback jika .env kosong
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "supersecretkey")  # fallback key
 
 # ==========================
 # LOGIN ROUTE
@@ -44,21 +48,19 @@ def login():
 @app.route("/")
 @login_required
 def index():
-    # Load active prompt
     active_prompt = get_active_prompt()
-
-    # Load latest alert
     alert_data = load_alert_safe()
     alert_display = None
+
     if alert_data:
-        # alert.json sekarang berbentuk list
+        # alert.json berbentuk list, ambil alert terakhir
         if isinstance(alert_data, list):
-            last_alert = alert_data[-1]  # ambil alert terakhir
+            last_alert = alert_data[-1]
             alert_display = sanitize_alert(last_alert, pii_enabled=active_prompt["pii_masking"] if active_prompt else True)
         elif isinstance(alert_data, dict):
             alert_display = sanitize_alert(alert_data, pii_enabled=active_prompt["pii_masking"] if active_prompt else True)
 
-    # Load all prompts
+    # Load semua prompts
     conn = get_db()
     cur = conn.cursor(dictionary=True)
     cur.execute("SELECT * FROM prompts")
