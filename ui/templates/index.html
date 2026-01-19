@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        .section { margin-bottom: 40px; }
+        .alert-box { padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; }
+        .history-box { padding: 10px; background-color: #eef; border: 1px solid #99c; }
+    </style>
+    <script>
+        // Auto-refresh setiap 10 detik
+        setTimeout(() => { window.location.reload(); }, 10000);
+    </script>
+</head>
+<body>
+    <h1>SOC Dashboard</h1>
+
+    <div class="section">
+        <h2>Prompts</h2>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>System Prompt</th>
+                <th>User Prompt Template</th>
+                <th>Active</th>
+            </tr>
+            {% for p in prompts %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.system_prompt }}</td>
+                <td>{{ p.user_prompt_template }}</td>
+                <td>{{ "Yes" if p.is_active else "No" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Latest Alert</h2>
+        {% if latest_alert %}
+        <div class="alert-box">
+            <p><strong>SIEM:</strong> {{ latest_alert.siem }}</p>
+            <p><strong>Severity:</strong> {{ latest_alert.severity }}</p>
+            <p><strong>Event:</strong> {{ latest_alert.event }}</p>
+            <p><strong>Source IP:</strong> {{ latest_alert.source_ip }}</p>
+            <p><strong>Destination:</strong> {{ latest_alert.destination }}</p>
+        </div>
+        {% else %}
+        <p>No alerts available.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Last LLM Response</h2>
+        {% if latest_history %}
+        <div class="history-box">
+            <p><strong>Prompt:</strong> {{ latest_history.prompt_name }}</p>
+            <p><strong>Response:</strong> <pre>{{ latest_history.llm_response }}</pre></p>
+            <p><strong>Time:</strong> {{ latest_history.created_at }}</p>
+        </div>
+        {% else %}
+        <p>No LLM response yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
