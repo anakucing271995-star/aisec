@@ -4,70 +4,99 @@
     <meta charset="UTF-8">
     <title>SOC Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background-color: #f2f2f2; }
-        .section { margin-bottom: 40px; }
-        .alert-box { padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; }
-        .history-box { padding: 10px; background-color: #eef; border: 1px solid #99c; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .alert {
+            border: 1px solid #e74c3c;
+            background-color: #fdecea;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f7f7f7;
+        }
+        a.button {
+            background-color: #3498db;
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        a.button:hover {
+            background-color: #2980b9;
+        }
     </style>
-    <script>
-        // Auto-refresh setiap 10 detik
-        setTimeout(() => { window.location.reload(); }, 10000);
-    </script>
 </head>
 <body>
-    <h1>SOC Dashboard</h1>
 
-    <div class="section">
-        <h2>Prompts</h2>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>System Prompt</th>
-                <th>User Prompt Template</th>
-                <th>Active</th>
-            </tr>
-            {% for p in prompts %}
-            <tr>
-                <td>{{ p.id }}</td>
-                <td>{{ p.name }}</td>
-                <td>{{ p.system_prompt }}</td>
-                <td>{{ p.user_prompt_template }}</td>
-                <td>{{ "Yes" if p.is_active else "No" }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
+<h1>SOC Dashboard</h1>
 
-    <div class="section">
-        <h2>Latest Alert</h2>
-        {% if latest_alert %}
-        <div class="alert-box">
-            <p><strong>SIEM:</strong> {{ latest_alert.siem }}</p>
-            <p><strong>Severity:</strong> {{ latest_alert.severity }}</p>
-            <p><strong>Event:</strong> {{ latest_alert.event }}</p>
-            <p><strong>Source IP:</strong> {{ latest_alert.source_ip }}</p>
-            <p><strong>Destination:</strong> {{ latest_alert.destination }}</p>
-        </div>
-        {% else %}
-        <p>No alerts available.</p>
-        {% endif %}
-    </div>
+{% if alert %}
+<div class="alert">
+    <h2>Latest Alert</h2>
+    <p><strong>SIEM:</strong> {{ alert.siem }}</p>
+    <p><strong>Severity:</strong> {{ alert.severity }}</p>
+    <p><strong>Event:</strong> {{ alert.event }}</p>
+    <p><strong>Source IP:</strong> {{ alert.source_ip }}</p>
+    <p><strong>Destination:</strong> {{ alert.destination }}</p>
+</div>
+{% endif %}
 
-    <div class="section">
-        <h2>Last LLM Response</h2>
-        {% if latest_history %}
-        <div class="history-box">
-            <p><strong>Prompt:</strong> {{ latest_history.prompt_name }}</p>
-            <p><strong>Response:</strong> <pre>{{ latest_history.llm_response }}</pre></p>
-            <p><strong>Time:</strong> {{ latest_history.created_at }}</p>
-        </div>
-        {% else %}
-        <p>No LLM response yet.</p>
-        {% endif %}
-    </div>
+<h2>Prompts</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>System Prompt</th>
+            <th>User Prompt Template</th>
+            <th>Active</th>
+            <th>PII Masking</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in prompts %}
+        <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.system_prompt[:100] }}{% if p.system_prompt|length > 100 %}...{% endif %}</td>
+            <td>{{ p.user_prompt_template[:100] }}{% if p.user_prompt_template|length > 100 %}...{% endif %}</td>
+            <td>{{ 'Yes' if p.is_active else 'No' }}</td>
+            <td>{{ 'Yes' if p.pii_masking else 'No' }}</td>
+            <td>
+                {% if session.role == 'lead' %}
+                <a class="button" href="/prompt/edit/{{ p.id }}">Edit</a>
+                {% else %}
+                -
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="7">No prompts found</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a href="/history">View Prompt History</a> | 
+<a href="/logout">Logout</a>
+
 </body>
 </html>
